@@ -1,75 +1,150 @@
 # CDK Depict
 
-A web application for generating chemical structure depictions from SMILES.
+CDK Depict is a Java 25 Spring MVC application for rendering molecules and
+reactions from SMILES, molfiles, and mapped reaction inputs. In addition to
+plain depiction it supports SMARTS highlighting, reaction-center annotation,
+SMIRKS-based transforms, and reaction mapping through RDT (Reaction Decoder
+Tool).
 
-## [https://www.simolecule.com/cdkdepict](http://www.simolecule.com/cdkdepict)
+The project is organized as a multi-module Maven build:
 
-## Docker
+- `cdkdepict-lib`: core depiction logic, HTTP endpoints, reaction mapping, and
+  tests
+- `cdkdepict-webapp`: Spring Boot WAR packaging plus the static `depict`,
+  `react`, and `map` frontends
+- `docker`: container build files and container-specific notes
+- `docs`: developer notes for endpoint contracts, RDT integration, and the
+  private-to-public mirror workflow
 
-An image is available on DockerHub, [https://hub.docker.com/r/simolecule/cdkdepict/](https://hub.docker.com/r/simolecule/cdkdepict/). To launch a CDK Depict web serivce running on 8081:
+## Features
 
-```
-$ docker run -p 8081:8080 simolecule/cdkdepict:latest
-```
+- Depict molecules and reactions in `svg`, `pdf`, `png`, `jpg`, and `gif`
+- Highlight SMARTS matches and explicit atom/bond subsets
+- Annotate atom numbers, atom maps, CIP labels, and reaction-center changes
+- Apply SMIRKS transforms through `/react/{style}/{fmt}`
+- Map reaction SMILES with RDT through `/map/{style}/{fmt}` and `/map/smi`
+- Serve a simple static UI with no frontend build step
 
-#### Prepacked release
+## Requirements
 
-You can download prebuilt release from GitHub, this is a runnable WAR and will
-launch a standalone server using Spring Boot:
- 
- * [`cdkdepict.war`](https://github.com/cdk/depict/releases/download/1.14/cdkdepict.war)
+- Java 25
+- Maven 3.9+
+- A local `com.bioinceptionlabs:rdt:4.0.0` artifact built with Java 25
 
-#### Build
+The CI workflow installs RDT from a pinned ReactionDecoder commit before
+building this repo. If your local machine does not already have a compatible
+RDT artifact in `~/.m2`, install it first:
 
-```
-$ mvn clean install
-```
-
-This generates a web archive (WAR) and a runnable java archive (JAR) in the
-target directory. The WAR file can be deployed to an application server (e.g. 
-TomCat, Jetty, GlassFish, JBOSS) whilst the JAR launches it's own embedded server.
-
-```
-$ target/cdkdepict-webapp-1.14.war
-```
-
-#### Standalone Bootable App
-
-When launching the embedded application the HTTP port is optional (default: 8080). 
-Run the following command and access the site 'http://localhost:8081' by web
-browser.
-
-```
-$ java -Dserver.port=8081 -jar  ./cdkdepict-webapp/target/cdkdepict-webapp-10.war
-```
-
-#### Caching
-
-When running your own CDK Depict it's useful to enable caching of the generated
-content. To enable caching you need to add the following setting to either the
-WebApp or TomCat's global `context.xml`:
-
-```
-<Valve className="org.apache.catalina.authenticator.BasicAuthenticator"
-  disableProxyCaching="false" />
+```bash
+RDT_REF=0d6632251108e7a8f625d15c60607a136093c4d8
+git clone https://github.com/asad/ReactionDecoder.git /tmp/ReactionDecoder
+git -C /tmp/ReactionDecoder checkout --detach "${RDT_REF}"
+mvn -B -f /tmp/ReactionDecoder/pom.xml clean install -DskipTests=true
 ```
 
-### Docker container
+If you previously installed an incompatible RDT build, remove
+`~/.m2/repository/com/bioinceptionlabs/rdt/4.0.0` and reinstall it with Java
+25.
 
-A docker container (using alpine linux) can be built and run as follows:
+## Build And Run
 
+Build the full project:
+
+```bash
+mvn -B clean test package
 ```
-$ cd docker && ./build.sh
-$ docker run -p 8180:8080 cdkdepict
+
+Run the bootable WAR locally:
+
+```bash
+java -Dserver.port=8081 -jar cdkdepict-webapp/target/cdkdepict-webapp-*.war
 ```
 
-#### Libraries
+There is also a tiny helper script:
 
- * [Spring](http://spring.io/)
- * [Chemistry Development Kit](http://github.com/cdk/cdk)
- * [Centres](http://github.com/simolecule/centres)
+```bash
+./run_depict.sh
+```
 
-#### License
+By default the UI is available at [http://localhost:8081/depict.html](http://localhost:8081/depict.html)
+when using the direct `java` command, or at port `8001` when using
+`run_depict.sh`.
 
-LGPL v2.1 or later
+## API Overview
 
+Main routes:
+
+- `GET /depict/{style}/{fmt}?smi=...`
+- `GET /react/{style}/{fmt}?smi=...&smirks=...`
+- `GET /map/{style}/{fmt}?smi=...`
+- `GET /map/smi?smi=...`
+
+Examples:
+
+```text
+/depict/cot/svg?smi=CCO
+/depict/bot/svg?smi=[CH3:1][CH3:2]>>[CH2:1]=[CH2:2]&annotate=colmap
+/react/cot/svg?smi=CCO&smirks=[C:1]-[O:2]>>[C:1]-[N:2]
+/map/smi?smi=CC(=O)O.OCC>>CC(=O)OCC.O
+```
+
+The detailed depict endpoint contract, supported styles, query parameters, and
+response behavior live in [docs/depict-endpoint-agent.md](docs/depict-endpoint-agent.md).
+
+## Architecture
+
+At a high level:
+
+- [`DepictController`](cdkdepict-lib/src/main/java/org/openscience/cdk/app/DepictController.java)
+  owns the main HTTP API and nearly all depiction, reaction-transform, and
+  reaction-mapping logic.
+- [`MolOp`](cdkdepict-lib/src/main/java/org/openscience/cdk/app/MolOp.java)
+  contains chemistry-specific helpers such as radical and dative-bond handling.
+- [`Context`](cdkdepict-webapp/src/main/java/org/openscience/cdk/app/Context.java)
+  wires Spring MVC resources and view resolution.
+- [`Application`](cdkdepict-webapp/src/main/spring-boot/org/openscience/cdk/app/Application.java)
+  is the Spring Boot entrypoint for the bootable WAR.
+- `cdkdepict-webapp/src/main/webapp/WEB-INF/static/` holds the static HTML,
+  CSS, and small jQuery-based frontends for depict, react, and map modes.
+
+Two architecture details matter for contributors:
+
+- The "library" module is not just chemistry helpers. It also contains the HTTP
+  controller and most request-handling logic.
+- The map flow delegates reaction mapping to RDT, then feeds the mapped reaction
+  back through the same depiction pipeline used by the normal depict endpoint.
+
+For deeper background on the RDT integration, see
+[docs/RDT_CDK_INTEGRATION.md](docs/RDT_CDK_INTEGRATION.md).
+
+## Development Notes
+
+- CI is defined in [`.github/workflows/maven.yml`](.github/workflows/maven.yml)
+  and uses Java 25 plus a pinned ReactionDecoder checkout.
+- The private repo can publish a sanitized public mirror with
+  [`scripts/publish_public_mirror.sh`](scripts/publish_public_mirror.sh).
+  See [docs/public-mirror.md](docs/public-mirror.md).
+- Container notes live in
+  [docker/README.md](docker/README.md).
+
+Useful local commands:
+
+```bash
+mvn -B test
+mvn -B -DskipTests compile
+mvn -B -Dtest=DepictControllerTest test
+```
+
+## Tests
+
+Current tests live in `cdkdepict-lib`:
+
+- `DepictControllerTest`: endpoint behavior and rendering-oriented coverage
+- `ReactionCenterDetectionTest`: reaction-center detection and fallback logic
+- `MolOpTest`: lower-level chemistry helpers
+
+There are currently no dedicated `cdkdepict-webapp` tests.
+
+## License
+
+This project is licensed under LGPL v2.1 or later. See [LICENSE](LICENSE).
