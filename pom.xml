@@ -22,8 +22,8 @@
     <depict.version>${project.parent.version}</depict.version>
     <junit.version>5.11.4</junit.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <spring-webmvc.version>6.2.1</spring-webmvc.version>
-    <spring-boot.version>3.4.1</spring-boot.version>
+    <spring-webmvc.version>6.2.19</spring-webmvc.version>
+    <spring-boot.version>3.5.16</spring-boot.version>
   </properties>
   <developers>
     <developer>
