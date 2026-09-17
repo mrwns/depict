@@ -1626,9 +1626,7 @@ public class DepictController {
   /**
    * CDK's SVG generator prepends a standard XML declaration + DOCTYPE, which
    * some consumers (e.g. strict client-side SVG sanitizers guarding against
-   * XXE/entity injection) reject outright. Strip it here, anchored at the
-   * very start of the string only, so callers receive a bare {@code <svg>}
-   * root element - the safest place to fix this once, for every consumer.
+   * XXE/entity injection) reject outright. Hence stripping the XML preamble.
    */
   private static String stripXmlPreamble(String svg) {
     return svg.replaceFirst("^\\s*<\\?xml[^?]*\\?>\\s*(<!DOCTYPE\\s+svg\\b[^>]*>\\s*)?", "");
