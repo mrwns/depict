@@ -635,7 +635,7 @@ public class DepictController {
 
     switch (fmtlc) {
       case Depiction.SVG_FMT:
-        return makeResponse(depiction.toSvgStr(getString(Param.SVGUNITS, extra))
+        return makeResponse(stripXmlPreamble(depiction.toSvgStr(getString(Param.SVGUNITS, extra)))
                                      .getBytes(), "image/svg+xml");
       case Depiction.PDF_FMT:
         return makeResponse(depiction.toPdfStr().getBytes(), "application/pdf");
@@ -846,7 +846,7 @@ public class DepictController {
 
     switch (fmtlc) {
       case Depiction.SVG_FMT:
-        return makeResponse(depiction.toSvgStr(getString(Param.SVGUNITS, extra))
+        return makeResponse(stripXmlPreamble(depiction.toSvgStr(getString(Param.SVGUNITS, extra)))
                                      .getBytes(), "image/svg+xml");
       case Depiction.PDF_FMT:
         return makeResponse(depiction.toPdfStr().getBytes(), "application/pdf");
@@ -1621,6 +1621,17 @@ public class DepictController {
     // header.set(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000");
     header.setContentLength(bytes.length);
     return new HttpEntity<>(bytes, header);
+  }
+
+  /**
+   * CDK's SVG generator prepends a standard XML declaration + DOCTYPE, which
+   * some consumers (e.g. strict client-side SVG sanitizers guarding against
+   * XXE/entity injection) reject outright. Strip it here, anchored at the
+   * very start of the string only, so callers receive a bare {@code <svg>}
+   * root element - the safest place to fix this once, for every consumer.
+   */
+  private static String stripXmlPreamble(String svg) {
+    return svg.replaceFirst("^\\s*<\\?xml[^?]*\\?>\\s*(<!DOCTYPE\\s+svg\\b[^>]*>\\s*)?", "");
   }
 
   /**
