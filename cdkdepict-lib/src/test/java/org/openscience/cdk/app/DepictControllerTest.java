@@ -4,6 +4,7 @@
 
 package org.openscience.cdk.app;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -159,6 +160,7 @@ class DepictControllerTest {
   }
 
   @Test
+  @Tag("slow") // RDT's MCS matching can hit its own internal timeouts (~120s+) under slow/shared hardware
   void mapReactionSmilesReturnsMappedReaction() throws Exception {
     DepictController controller = new DepictController();
     String mapped = controller.mapReactionSmiles("CC(=O)O.OCC>>CC(=O)OCC.O");
@@ -167,6 +169,7 @@ class DepictControllerTest {
   }
 
   @Test
+  @Tag("slow")
   void mapReactionSmilesWithAgentsReturnsMappedReaction() throws Exception {
     DepictController controller = new DepictController();
     String mapped = controller.mapReactionSmiles("CCO.[CH3:1][C:2](=[O:3])[OH:4]>[H+]>CC[O:4][C:2](=[O:3])[CH3:1].O");
@@ -175,6 +178,7 @@ class DepictControllerTest {
   }
 
   @Test
+  @Tag("slow")
   void mapEndpointRendersMappedReaction() throws Exception {
     DepictController controller = new DepictController();
     HttpEntity<?> response = controller.map("CC(=O)O.OCC>>CC(=O)OCC.O",

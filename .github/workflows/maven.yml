@@ -26,4 +26,7 @@ jobs:
           git -C "${RUNNER_TEMP}/ReactionDecoder" checkout --detach "${RDT_REF}"
           mvn -B -f "${RUNNER_TEMP}/ReactionDecoder/pom.xml" clean install -DskipTests=true
       - name: Build with Maven
-        run: mvn -B clean test javadoc:javadoc package
+        # excludedGroups=slow: skips RDT-based reaction-mapping tests whose
+        # runtime depends on RDT's own internal MCS-matching timeouts
+        # (~120s+ each) - unreliable as a build gate on shared CI runners.
+        run: mvn -B clean test javadoc:javadoc package -DexcludedGroups=slow

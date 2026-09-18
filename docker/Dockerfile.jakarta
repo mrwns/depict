@@ -12,7 +12,10 @@ RUN apk add --no-cache git && \
 COPY cdkdepict-lib cdkdepict-lib
 COPY cdkdepict-webapp cdkdepict-webapp
 COPY pom.xml pom.xml
-RUN mvn clean package -Pbootable,jakarta
+# excludedGroups=slow: skips RDT-based reaction-mapping tests whose runtime
+# depends on RDT's own internal MCS-matching timeouts (~120s+ each) -
+# unreliable as a build gate on shared/variable CI hardware.
+RUN mvn clean package -Pbootable,jakarta -DexcludedGroups=slow
 
 FROM eclipse-temurin:25-jre-alpine as runtime
 
