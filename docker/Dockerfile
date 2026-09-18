@@ -1,11 +1,11 @@
-FROM maven:3.9.14-eclipse-temurin-25-alpine as builder
+FROM maven:3.9.14-eclipse-temurin-25-alpine AS builder
 WORKDIR /usr/src/app
 COPY cdkdepict-lib cdkdepict-lib
 COPY cdkdepict-webapp cdkdepict-webapp
 COPY pom.xml pom.xml
 RUN mvn clean package
 
-FROM eclipse-temurin:25-jre-alpine as runtime
+FROM eclipse-temurin:25-jre-alpine AS runtime
 
 # we need a font! DejaVu does fine but we only want the Sans-Serif one
 RUN apk add --no-cache libgcc && \
