@@ -19,8 +19,10 @@ RUN mvn clean package -Pbootable,jakarta -DexcludedGroups=slow
 
 FROM eclipse-temurin:25-jre-alpine AS runtime
 
+# apk upgrade: pull OS security patches newer than the (possibly cached) base layer.
 # we need a font! DejaVu does fine but we only want the Sans-Serif one
-RUN apk add --no-cache libgcc && \
+RUN apk upgrade --no-cache && \
+    apk add --no-cache libgcc && \
     rm /usr/share/fonts/dejavu/DejaVuSerif* \
     /usr/share/fonts/dejavu/DejaVuSansCond* \
     /usr/share/fonts/dejavu/DejaVuSansMono* \
