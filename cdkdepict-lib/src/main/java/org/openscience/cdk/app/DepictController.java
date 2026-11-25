@@ -243,7 +243,8 @@ public class DepictController {
 
   public DepictController() throws IOException {
     this.groupAbbr.loadFromFile("/org/openscience/cdk/app/group_abbr.smi");
-    this.agentAbbr.loadFromFile("/org/openscience/cdk/app/reagent_abbr.smi");
+    // strict: reagent_abbr.smi can be replaced at image build time (overrides/README.md)
+    AbbreviationLoader.load(this.agentAbbr, "/org/openscience/cdk/app/reagent_abbr.smi");
     this.agentAbbr.loadFromFile("/org/openscience/cdk/app/group_abbr.smi");
     this.agentAbbr
             .with(Abbreviations.Option.ALLOW_SINGLETON)

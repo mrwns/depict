@@ -10,6 +10,9 @@ RUN apk add --no-cache git && \
     rm -rf /tmp/ReactionDecoder
 
 COPY cdkdepict-lib cdkdepict-lib
+# Files placed in overrides/ (untracked) replace the same-named app resources,
+# e.g. reagent_abbr.smi - see overrides/README.md.
+COPY overrides/ cdkdepict-lib/src/main/resources/org/openscience/cdk/app/
 COPY cdkdepict-webapp cdkdepict-webapp
 COPY pom.xml pom.xml
 # excludedGroups=slow: skips RDT-based reaction-mapping tests whose runtime

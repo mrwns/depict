@@ -17,6 +17,9 @@ $ docker build -t cdkdepict -f docker/Dockerfile .
 $ docker build -t cdkdepict-jakarta -f docker/Dockerfile.jakarta .
 ```
 
+`Dockerfile.jakarta` also bakes in any files placed in `overrides/` (e.g. a
+custom `reagent_abbr.smi`) - see [../overrides/README.md](../overrides/README.md).
+
 # Run
 
 The web service is exposed through port 8080. To expose locally on port 8180 we
