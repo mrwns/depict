@@ -91,6 +91,21 @@ Examples:
 The detailed depict endpoint contract, supported styles, query parameters, and
 response behavior live in [docs/depict-endpoint-agent.md](docs/depict-endpoint-agent.md).
 
+## Custom Reagent Abbreviations
+
+Reaction agents are labelled from
+`cdkdepict-lib/src/main/resources/org/openscience/cdk/app/reagent_abbr.smi`.
+To ship a different list without committing it, drop it into `overrides/`
+before building the image (see [overrides/README.md](overrides/README.md)):
+
+```bash
+cp path/to/custom.smi overrides/reagent_abbr.smi
+docker build -f docker/Dockerfile.jakarta -t cdkdepict .
+```
+
+`AbbreviationLoader` loads this file strictly, so a bad entry fails the
+tests inside the Docker build instead of being silently skipped.
+
 ## Architecture
 
 At a high level:
@@ -142,6 +157,7 @@ Current tests live in `cdkdepict-lib`:
 - `DepictControllerTest`: endpoint behavior and rendering-oriented coverage
 - `ReactionCenterDetectionTest`: reaction-center detection and fallback logic
 - `MolOpTest`: lower-level chemistry helpers
+- `AbbreviationLoaderTest`: strict loading of the reagent abbreviation file
 
 There are currently no dedicated `cdkdepict-webapp` tests.
 

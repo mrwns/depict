@@ -36,6 +36,9 @@ webapp module.
 - `cdkdepict-lib/src/main/java/org/openscience/cdk/app/DepictController.java`
   - main request handler for `/depict`, `/react`, `/map`, and `/map/smi`
   - owns most rendering, transform, and mapping behavior
+- `cdkdepict-lib/src/main/java/org/openscience/cdk/app/AbbreviationLoader.java`
+  - strict loader for `reagent_abbr.smi`, which can be replaced at image
+    build time through `overrides/` (see `overrides/README.md`)
 - `cdkdepict-lib/src/main/java/org/openscience/cdk/app/MolOp.java`
   - chemistry helper utilities such as radical and dative-bond handling
 - `cdkdepict-webapp/src/main/java/org/openscience/cdk/app/Context.java`

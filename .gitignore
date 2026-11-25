@@ -19,3 +19,7 @@ hs_err_pid*
 rebuild-orac-ssh.sh
 rebuild-orac.sh
 rebuild-pub.sh
+
+# build-time resource overrides, never committed (see overrides/README.md)
+/overrides/*
+!/overrides/README.md
